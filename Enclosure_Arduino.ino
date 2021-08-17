@@ -27,6 +27,7 @@ boolean powerCount = HIGH;
 boolean endCount = HIGH;
 boolean ledState = LOW;
 boolean blinkOn = LOW;
+boolean pRunning = LOW;
 float tempF = 0;
 float minTemp = 200;
 float maxTemp = 0;
@@ -91,8 +92,18 @@ void loop() {
   else {digitalWrite(receivePin, LOW);}
 
   
-  if (digitalRead(pswitchPin) == LOW){powerMillis = millis();}
-  if (digitalRead(endswitch) == LOW){endStopMillis = millis();}
+  if (digitalRead(pswitchPin) == LOW){
+    powerMillis = millis();
+    if (pRunning == HIGH) {machineRunning(1);}
+    else {machineRunning(0);}
+  }
+  else {machineRunning(4);}
+  
+  
+  if (digitalRead(endswitch) == LOW){
+    endStopMillis = millis();
+    pRunning = HIGH;
+    }
   
   if (millis() - powerMillis >= powerInterval){
     if (powerCount == HIGH) {interuptpTrigger();}
@@ -100,9 +111,12 @@ void loop() {
     }
   else {powerCount = HIGH;}
   
-  if (millis() - endStopMillis >= endInterval){
-    if (endCount == HIGH) {endTimer(18000);}
+  if ((millis() - endStopMillis >= endInterval) && (pRunning == HIGH)) {
+    if (endCount == HIGH) {endTimer(18000);
+    pRunning = LOW;
+    }
     endCount = LOW;
+    
     }
   else {endCount = HIGH;} 
 
@@ -119,6 +133,7 @@ void loop() {
   else{digitalWrite(powerPin, HIGH);}
 
 }
+
 void interuptlTrigger(){
   unsigned long ltempMillis = millis();
   if (ltempMillis  - lightMillis >= lightInterval) {
@@ -151,10 +166,9 @@ void compSwitch(){
     blinkOn = HIGH;
   }
   if (val == 52){   //#4
-    redNum = 0;
-    greenNum = 0;
-    blueNum = 255;
-    blinkOn = HIGH;
+   machineRunning(4);
+   pRunning = HIGH;
+   blinkOn = HIGH;
   }
   if (val == 53){   //#5
     endTimer(18000);
@@ -230,9 +244,7 @@ void endTimer(long x){
     }
   lTrigger = LOW;
   pTrigger = HIGH;
-  redNum = 0;
-  greenNum = 0;
-  blueNum = 0;
+  pRunning = LOW;
 }
 
 void recieveBlink () {
@@ -242,5 +254,33 @@ void recieveBlink () {
   if (blinkCount >= blinkMax) {
     blinkOn = LOW;
     blinkCount = 0; 
+  }
+}
+
+void machineRunning(int x){
+  if (x == 0) {
+       redNum = 0;
+     greenNum = 255;
+     blueNum = 255;
+  }
+  else if (x == 1) {
+    redNum = 0;
+    greenNum = 0;
+    blueNum = 255;
+  }
+    else if (x == 3) {
+    redNum = 255;
+    greenNum = 255;
+    blueNum = 0;
+  }
+    else if (x == 4) {
+    redNum = 255;
+    greenNum = 0;
+    blueNum = 0;
+  }
+   else {
+    redNum = 255;
+    greenNum = 255;
+    blueNum = 255;
   }
 }
