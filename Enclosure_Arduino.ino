@@ -1,4 +1,3 @@
-//JBruening
 //7.23.2021
 
 #include <DHT.h>
@@ -54,7 +53,6 @@ DHT dht(tempPin, DHTTYPE);
 void setup() {
 
   Serial.begin(115200);
-  // Serial.println("Bruening Tec 2021");
   // Serial.print("Sketch:   ");   Serial.println(__FILE__);
   // Serial.print("Uploaded: ");   Serial.println(__DATE__);
   // Serial.println(" ");
