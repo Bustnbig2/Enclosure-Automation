@@ -1,5 +1,4 @@
-//jBruening
-// 8/3/21
+// 5/18/22
 
 import javax.swing.JOptionPane;
 import processing.serial.*;
