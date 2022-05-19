@@ -1,4 +1,4 @@
-//5.17.2022
+//5.19.2022
 
 #include <DHT.h>
 #include <DHT_U.h>
@@ -29,7 +29,8 @@ boolean lTrigger = LOW;
 boolean pTrigger = LOW;
 boolean ledState = LOW;
 boolean blinkOn = LOW;
-boolean warningIndicator = LOW;
+boolean printStarted = LOW;
+boolean startEndTimer = LOW;
 float tempF = 0;
 float humidity = 0;
 const long blinkinterval = 2000;
@@ -37,9 +38,8 @@ const long tempInterval = 2100;
 const long sendInterval = 2100;
 const long eStopInterval = 250;
 const long lightInterval = 100;
-const long powerInterval = 1000;
+const long powerInterval = 300000;
 const long blinkMax = 500;
-const long endInterval = 300000;
 unsigned long previousMillis = 0;
 unsigned long tempMillis = 0;
 unsigned long lightMillis = 0;
@@ -78,8 +78,22 @@ void loop() {
 	compSwitch();
 	recieveBlink();
 	
-	if (digitalRead(printerRunning) == HIGH) {machineRunning(0);}
-	else {machineRunning(1);}
+	if (digitalRead(printerRunning) == HIGH) {
+		machineRunning(0);
+		if (printStarted == HIGH){
+			if (digitalRead(pswitchPin) == LOW) {
+				machineRunning(4);
+				endTimer();}
+			else {
+				startEndTimer = LOW;
+				printStarted = LOW;
+				}
+		}
+	}
+	else {
+		machineRunning(1);
+		printStarted = HIGH;
+		}
 	
 	if (blinkOn == HIGH) {digitalWrite(receivePin, HIGH);}
 	else {digitalWrite(receivePin, LOW);}
@@ -92,18 +106,7 @@ void loop() {
 		emergency(4);
 		}
 	
-	if (digitalRead(pswitchPin) == HIGH){
-		powerMillis = millis();
-		pTrigger = LOW;
-		}
-	
-	if (millis() - powerMillis >= powerInterval){
-		if (digitalRead(pswitchPin) == HIGH) {pTrigger = LOW;}
-		else {
-			machineRunning(4);
-			endTimer();
-			}
-		}
+
 	
 	if (digitalRead(lswitchPin) == HIGH){
 		lightMillis = millis();
@@ -139,7 +142,6 @@ void readTemp(){
 void tempAnalysis(){
 	if (tempF > 200){emergency(1);}
 	else if (tempF > 175){emergency(2);}
-	else if (warningIndicator == HIGH){emergency(2);}
 	else if (tempF > 150){emergency(3);}
 	else {lightColor(redNum, greenNum, blueNum);}
 }
@@ -231,7 +233,7 @@ void machineRunning(int x){
 	}
 	else if (x == 4) {
 		redNum = 255;
-		greenNum = 0;
+		greenNum = 255;
 		blueNum = 0;
 	}
 	else {
@@ -255,12 +257,12 @@ void sendSerial(int R, int G, int B){
 }
 
 void endTimer(){
-	unsigned long endMillis = millis();
-		while (millis() - endMillis < endInterval) {
-			readTemp();
-			tempAnalysis();
-			blinkColor(0,0,255,255,0,255);
+	if (startEndTimer == LOW) {
+		powerMillis = millis();
+		startEndTimer = HIGH;
 		}
+	
+	if (millis() - powerMillis >= powerInterval){
 		while (1) {
 			lTrigger = LOW;
 			digitalWrite(lightPin, LOW);
@@ -268,4 +270,5 @@ void endTimer(){
 			digitalWrite(powerPin, HIGH);
 			blinkColor(255,0,0,0,0,255);
 		}
+	}
 }
